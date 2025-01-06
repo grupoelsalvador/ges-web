@@ -1,0 +1,20 @@
+/* Asegurarse de que el modal ocupe toda la pantalla */
+.modal-fullscreen {
+    max-width: 100% !important;  /* Hace que el modal ocupe el 100% de la pantalla */
+    height: 100% !important;     /* Hace que el modal ocupe el 100% del alto de la pantalla */
+    top: 0 !important;          /* Alinea el modal a la parte superior */
+    left: 0 !important;         /* Alinea el modal a la izquierda */
+    margin: 0 !important;       /* Elimina márgenes */
+}
+
+/* Fondo del modal */
+.modal-content {
+    background-color: white;  /* Color de fondo para el contenido */
+    border-radius: 0 !important; /* Elimina bordes redondeados */
+    box-shadow: none !important; /* Elimina sombra */
+}
+
+/* Asegura que el fondo detrás del modal sea oscuro */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.7) !important;  /* Fondo oscuro */
+}

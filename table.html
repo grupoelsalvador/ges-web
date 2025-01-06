@@ -1,0 +1,183 @@
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membresias</title>
+    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"></script>
+<script type="module" src="js/auth-protect.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <!-- Cargar jsPDF desde un CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- jsPDF -->
+
+  <!-- jsPDF Google Fonts Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.plugin.fonts.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+
+      <script src="js/appedit.js" type="module"></script>
+  </head>
+  <div id="navbar"></div>
+  <script>
+      document.addEventListener("DOMContentLoaded", async () => { 
+          try {
+              const response = await fetch("navbar.html");
+              const navbarHtml = await response.text();
+              document.getElementById("navbar").innerHTML = navbarHtml;
+          } catch (error) {
+              console.error("Error al cargar la navbar:", error);
+          }
+      });
+  </script>
+  <body>
+      <br>
+
+    <!-- Modal para editar cliente -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Editar Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Formulario dentro del modal -->
+        <form id="editForm">
+          <div class="mb-3">
+            <label for="nombredelcliente" class="form-label">Nombre del Cliente</label>
+            <input type="text" class="form-control" id="nombredelcliente" name="nombredelcliente" required>
+          </div>
+          <div class="mb-3">
+            <label for="tipodetarjeta" class="form-label">Tipo de Tarjeta</label>
+            <select class="form-select" id="tipodetarjeta" name="tipodetarjeta">
+              <!-- Opciones se cargarán dinámicamente -->
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="miembrodesde" class="form-label">Miembro Desde</label>
+            <input type="date" class="form-control" id="miembrodesde" name="miembrodesde" required>
+          </div>
+          <div class="mb-3">
+            <label for="contacto" class="form-label">Contacto</label>
+            <input type="text" class="form-control" id="contacto" name="contacto" required>
+          </div>
+          <div class="mb-3" style="display: none;">
+            <label for="codigo" class="form-label">Código</label>
+            <input type="text" class="form-control" id="codigo" name="codigo" required>
+          </div>
+          <div class="mb-3">
+            <label for="correo" class="form-label">Correo</label>
+            <input type="email" class="form-control" id="correo" name="correo" required>
+          </div>
+          <div class="mb-3">
+            <label for="whatsapp" class="form-label">WhatsApp</label>
+            <input type="text" class="form-control" id="whatsapp" name="whatsapp" required>
+          </div>
+          <div class="mb-3">
+            <label for="referidode" class="form-label">Referido De</label>
+            <select class="form-select" id="referidode" name="referidode">
+              <!-- Opciones se cargarán dinámicamente -->
+            </select>
+          </div>
+          <input type="hidden" id="editingDocId">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" id="saveChanges">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div style="display: none;" >
+  
+  <button id="create" class="btn btn-primary w-100">Crear</button>
+  
+</div>
+          </div>
+          <!-- Campo de búsqueda -->
+          <br>
+        <!-- Botón para generar PDF -->
+      <div style="display: none;">
+          <button id="generatePdf" class="btn btn-primary">Generar Tarjeta</button>
+      </div>
+  <br>
+  <br>
+        <!-- Imagen que quieres usar en el PDF -->
+        <img id="imageToUse" src="tarjeta.png" style="display:none" />
+        <img id="secondImageToUse" src="reverso.png" style="display:none" />
+
+
+        <!-- Select para elegir un cliente desde Firebase -->
+      <div style="display: none;">
+          <select id="clientesSelect" class="form-select">
+              <option value="">Selecciona un cliente</option>
+          </select>
+  
+          <!-- Mostrar el nombre del cliente y el número de tarjeta cuando se selecciona un cliente -->
+          <br>
+          <p>Nombre del Cliente: <span id="clienteNombre"></span></p>
+          <p>Número de Tarjeta: <span id="clienteNumeroTarjeta"></span></p>
+          <br> 
+      </div>
+        <!-- Campo de búsqueda -->
+         <h2 style="text-align: center;">Administrador de miembros</h2>
+<div style="display: flex; justify-content: center; align-items: center;">
+  <button id="exportToExcel" class="btn btn-primary" >Exportar a Excel</button>
+
+</div>
+<br>
+<label for="" class="form-label" style="padding-left: 5px;">Buscador</label>
+  <input type="text" class="form-control" id="searchInput" placeholder="Buscar cliente..." />
+  <br>
+
+          <div class="table-responsive mt-4">
+            <table class="table" id="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre</th>
+                  <th>Tarjeta</th>
+                  <th>Miembro Desde</th>
+                  <th>Contacto</th>
+                
+                  <th>Referido De</th>
+                  <th>Correo</th>
+                  <th>WhatsApp</th>
+                  <th>Numero de tarjeta</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Contenedor para Toasts -->
+<div id="toastContainer" class="position-fixed top-0 end-0 p-3">
+  <!-- Los toasts aparecerán aquí dinámicamente -->
+</div>
+
+<!-- Agregar Bootstrap para estilos de Toast -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABQzDHqC1nQf3V7gOSQ3lJJ5aXk04zJ8osgFq1V3HE38I08AYFv2cUq" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz4fnFO9gybQ2zvZHe6p/bZbXkU4jBt9g/mEO1gY7s1yD60+/+T6AcO/9K" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js" integrity="sha384-cu/z/WuPfknu93gH99iBWrZC6h2IzbLo8WSoFiQz0lAp9qx0yHAlkp/mWsQz0pOb" crossorigin="anonymous"></script>
+
+   <script src="js/export.js"></script>
+   <script type="module" src="js/auth-protect.js"></script>
+  </body>
+  </html>
