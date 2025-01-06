@@ -343,7 +343,7 @@ createBtn.addEventListener("click", async () => {
     );
 
     // Validación de campos obligatorios
-    if (!data.nombredelcliente || !data.miembrodesde || !data.contacto || !data.codigo || !data.correo || !data.whatsapp) {
+    if (!data.nombredelcliente || !data.miembrodesde || !data.contacto || !data.correo || !data.whatsapp) {
         showToast("Por favor, completa todos los campos obligatorios.", 'warning');
         return;
     }
