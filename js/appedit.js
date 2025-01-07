@@ -285,7 +285,7 @@ document.querySelectorAll(".generate-pdf-btn").forEach((btn) =>
                 doc.addImage(img2, 'PNG', 10, 10, 180, 170); // x, y, width, height
 
                 // Guardar el PDF
-                doc.save('cliente.pdf');
+                doc.save(data.nombredelcliente);
             } else {
                 console.log("El cliente no existe en la base de datos.");
             }
