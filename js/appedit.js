@@ -105,7 +105,7 @@ generatePdfBtn.addEventListener("click", () => {
     doc.text(`${clienteNumeroTarjeta.textContent}`, 25, 107); // Número de tarjeta en color verde
     
     // Guardar el PDF
-    doc.save('cliente.pdf');
+    doc.save(data.nombredelcliente);
 });
 
 
