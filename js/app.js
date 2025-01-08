@@ -1,27 +1,29 @@
-// Importa Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-import { fontBase64 as importedFontBase64 } from './font.js';
+    // Importa Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { fontBase64 as importedFontBase64 } from './font.js';
 
-// Configuración de Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDomcoN85Ehas3A55S8txtlw6OTSY1v2bk",
-  authDomain: "ges-grupo.firebaseapp.com",
-  projectId: "ges-grupo",
-  storageBucket: "ges-grupo.firebasestorage.app",
-  messagingSenderId: "356789219961",
-  appId: "1:356789219961:web:9afba5766ea9ad1ac15aa8",
-  measurementId: "G-1L39928RBK"
-};
+    // Configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDomcoN85Ehas3A55S8txtlw6OTSY1v2bk",
+        authDomain: "ges-grupo.firebaseapp.com",
+        projectId: "ges-grupo",
+        storageBucket: "ges-grupo.firebasestorage.app",
+        messagingSenderId: "356789219961",
+        appId: "1:356789219961:web:9afba5766ea9ad1ac15aa8",
+        measurementId: "G-1L39928RBK"
+    };
+    
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const clientesSelect = document.getElementById("clientesSelect");
-const clienteNombre = document.getElementById("clienteNombre");
-const clienteNumeroTarjeta = document.getElementById("clienteNumeroTarjeta");
-const generatePdfBtn = document.getElementById("generatePdf");
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const clientesSelect = document.getElementById("clientesSelect");
+    const clienteNombre = document.getElementById("clienteNombre");
+    const clienteNumeroTarjeta = document.getElementById("clienteNumeroTarjeta");
+    const generatePdfBtn = document.getElementById("generatePdf");
 
 // Cargar los clientes cuando la página se cargue
 async function loadClients() {
@@ -107,7 +109,7 @@ generatePdfBtn.addEventListener("click", () => {
     doc.text(`${clienteNumeroTarjeta.textContent}`, 25, 107); // Número de tarjeta en color verde
     
     // Guardar el PDF
-    doc.save('cliente.pdf');
+    doc.save(data.nombredelcliente);
 });
  // Obtener el input de tipo date
 const fechaInput = document.getElementById("miembrodesde");
@@ -284,7 +286,7 @@ async function loadData(searchTerm = "") {
                     doc.text(clienteNumeroTarjeta, 25, 107); // Número de tarjeta en color verde
     
                     // Guardar el PDF
-                    doc.save('cliente.pdf');
+                    doc.save(data.nombredelcliente);
                 } else {
                     console.log("El cliente no existe en la base de datos.");
                 }
@@ -343,7 +345,7 @@ createBtn.addEventListener("click", async () => {
     );
 
     // Validación de campos obligatorios
-    if (!data.nombredelcliente || !data.miembrodesde || !data.contacto || !data.correo || !data.whatsapp) {
+    if (!data.nombredelcliente || !data.miembrodesde || !data.contacto || !data.codigo || !data.correo || !data.whatsapp) {
         showToast("Por favor, completa todos los campos obligatorios.", 'warning');
         return;
     }
@@ -357,13 +359,23 @@ createBtn.addEventListener("click", async () => {
             data.referidode = data.referidode; // Guardar directamente el ID del referente
         }
 
-        // Guardar los datos en Firestore
+        // Si estamos editando un cliente existente, actualizamos en ambas colecciones
         if (editingDocId) {
+            // Actualizar en la colección "clients"
             await updateDoc(doc(db, "clients", editingDocId), data);
-            showToast("Cliente actualizado correctamente.", 'success');
+            
+           
+            showToast("Cliente actualizado correctamente en ambas bases de datos.", 'success');
         } else {
-            await addDoc(collection(db, "clients"), data);
-            showToast("Cliente registrado correctamente.", 'success');
+            // Si es un nuevo cliente, agregamos a ambas colecciones
+
+            // Agregar al "clients"
+            const clientRef = await addDoc(collection(db, "clients"), data);
+
+            // Solo guardamos el nombre en "clientela"
+           
+            
+            showToast("Cliente registrado correctamente en ambas bases de datos.", 'success');
         }
 
         // Limpiar los campos
@@ -374,53 +386,12 @@ createBtn.addEventListener("click", async () => {
         // Recargar los datos
         loadData();
 
-        // Generar el PDF con los datos del formulario, número de tarjeta y las imágenes
-        const img1 = document.getElementById("imageToUse"); // Primer imagen
-        const img2 = document.getElementById("secondImageToUse"); // Segunda imagen
-
-        // Verificar si ambas imágenes están disponibles
-        if (!img1.complete || !img2.complete) {
-            showToast("Una o ambas imágenes no se han cargado correctamente.", 'warning');
-            return;
-        }
-
-        // Crear el documento PDF
-        const { jsPDF } = window.jspdf;
-        const fontBase64 = importedFontBase64;
-
-        const doc = new jsPDF();
-        doc.addFileToVFS("ShareTechMono.ttf", fontBase64);
-        doc.addFont("ShareTechMono.ttf", "Share Tech Mono", "normal");
-
-        // Insertar la primera imagen en el PDF
-        doc.addImage(img1, 'PNG', 10, 10, 180, 170); // x, y, width, height
-
-        // Establecer la fuente y tamaño para el texto en la primera página
-        doc.setFont("Share Tech Mono"); 
-        doc.setFontSize(25);
-
-        // Cambiar el color del texto para el nombre del cliente
-        doc.setTextColor(246, 187, 33); // Rojo anaranjado
-        doc.text(`${data.nombredelcliente}`, 25, 95); // Nombre del cliente
-
-        // Cambiar el color del texto para el número de tarjeta
-        doc.setTextColor(235, 235, 235); // Verde
-        doc.text(`${data.numerodetarjeta}`, 25, 107); // Número de tarjeta
-
-        // Agregar una nueva página para la segunda imagen
-        doc.addPage();
-
-        // Insertar la segunda imagen en la nueva página
-        doc.addImage(img2, 'PNG', 10, 10, 180, 170); // x, y, width, height
-
-        // Guardar el PDF
-        doc.save('cliente.pdf');
-        
     } catch (error) {
         console.error("Error al guardar los datos:", error);
         showToast("Error al guardar los datos: " + error.message, 'danger');
     }
 });
+
 
 // Función para mostrar los toasts
 function showToast(message, type) {
@@ -465,11 +436,13 @@ async function loadReferidos() {
         selectReferidos.innerHTML = '<option value="">Selecciona un referente</option>';
 
         // Verificar si la colección tiene datos
-        if (querySnapshot.empty) {
+        if (querySnapshot.empty)
+             {
             console.log("No hay referidos disponibles");
             return;
         }
 
+        
         // Iterar sobre los documentos de la colección
         querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -485,8 +458,36 @@ async function loadReferidos() {
     }
 }
 
+
 // Llamar la función para cargar los referidos cuando se inicializa la página
 loadReferidos();
+loadnombresss();
+
+async function loadnombresss() {
+    try {
+        // Verifica que el select esté disponible
+        const selectnombresss = document.getElementById("nombredelcliente");
+        if (!selectnombresss) {
+            console.log("No se encontró el select con id nombredelcliente");
+            return;
+        }
+
+        // Obtén los datos y agrega las opciones
+        const querySnapshot = await getDocs(collection(db, "clientela"));
+        selectnombresss.innerHTML = '<option value="">Selecciona un cliente</option>';
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const option = document.createElement("option");
+            option.value = data.nombredelcliente;
+            option.textContent = data.nombredelcliente || "Nombre no disponible";
+            selectnombresss.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Error al cargar los nombres:", error);
+    }
+}
+
 
 
 function generarNumeroDeTarjeta() {

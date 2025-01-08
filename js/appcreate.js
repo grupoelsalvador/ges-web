@@ -1,28 +1,29 @@
-// Importa Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-import { fontBase64 as importedFontBase64 } from './font.js';
-// Configuración de Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyDomcoN85Ehas3A55S8txtlw6OTSY1v2bk",
-    authDomain: "ges-grupo.firebaseapp.com",
-    projectId: "ges-grupo",
-    storageBucket: "ges-grupo.firebasestorage.app",
-    messagingSenderId: "356789219961",
-    appId: "1:356789219961:web:9afba5766ea9ad1ac15aa8",
-    measurementId: "G-1L39928RBK"
-  };
-  
+    // Importa Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { fontBase64 as importedFontBase64 } from './font.js';
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDomcoN85Ehas3A55S8txtlw6OTSY1v2bk",
+        authDomain: "ges-grupo.firebaseapp.com",
+        projectId: "ges-grupo",
+        storageBucket: "ges-grupo.firebasestorage.app",
+        messagingSenderId: "356789219961",
+        appId: "1:356789219961:web:9afba5766ea9ad1ac15aa8",
+        measurementId: "G-1L39928RBK"
+    };
+    
 
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const clientesSelect = document.getElementById("clientesSelect");
-const clienteNombre = document.getElementById("clienteNombre");
-const clienteNumeroTarjeta = document.getElementById("clienteNumeroTarjeta");
-const generatePdfBtn = document.getElementById("generatePdf");
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const clientesSelect = document.getElementById("clientesSelect");
+    const clienteNombre = document.getElementById("clienteNombre");
+    const clienteNumeroTarjeta = document.getElementById("clienteNumeroTarjeta");
+    const generatePdfBtn = document.getElementById("generatePdf");
 
 // Cargar los clientes cuando la página se cargue
 async function loadClients() {
@@ -87,7 +88,8 @@ generatePdfBtn.addEventListener("click", () => {
     const fontUrl = "ShareTechMono-Regular.ttf"; // Ruta al archivo de la fuente
 
     // Convertir la fuente a base64 (puedes usar alguna herramienta en línea para hacerlo)
-   
+    const fontBase64 = importedFontBase64;
+
     const doc = new jsPDF();
     doc.addFileToVFS("ShareTechMono.ttf", fontBase64);
     doc.addFont("ShareTechMono.ttf", "Share Tech Mono", "normal");
@@ -107,8 +109,19 @@ generatePdfBtn.addEventListener("click", () => {
     doc.text(`${clienteNumeroTarjeta.textContent}`, 25, 107); // Número de tarjeta en color verde
     
     // Guardar el PDF
-    doc.save('cliente.pdf');
+    doc.save(data.nombredelcliente);
 });
+ // Obtener el input de tipo date
+const fechaInput = document.getElementById("miembrodesde");
+
+// Obtener la fecha actual
+const fechaActual = new Date();
+
+// Formatear la fecha al formato 'YYYY-MM-DD' que es el que espera el input de tipo date
+const fechaFormateada = fechaActual.toISOString().split('T')[0];
+
+// Establecer la fecha predeterminada
+fechaInput.value = fechaFormateada;
 
 
 console.log(window.jspdf);
@@ -198,24 +211,16 @@ async function loadData(searchTerm = "") {
         const data = docSnapshot.data();
     
         // Filtrar por nombre del cliente (o cualquier otro campo)
-        if (
-            data.nombredelcliente.toLowerCase().includes(searchTerm) ||
-            data.tipodetarjeta.toLowerCase().includes(searchTerm) ||
-            data.miembrodesde.toLowerCase().includes(searchTerm) ||
-            data.contacto.toLowerCase().includes(searchTerm) ||
-            data.referidode.toLowerCase().includes(searchTerm) ||
-            data.correo.toLowerCase().includes(searchTerm) ||
-            data.whatsapp.toLowerCase().includes(searchTerm) ||
-            data.numerodetarjeta.toLowerCase().includes(searchTerm)
-        ) {
+        if (data.nombredelcliente.toLowerCase().includes(searchTerm)) {
             const row = document.createElement("tr");
-        
+    
             row.innerHTML = `
                 <th>${index++}</th>
                 <td>${data.nombredelcliente || ""}</td>
                 <td>${data.tipodetarjeta || ""}</td>
                 <td>${data.miembrodesde || ""}</td>
                 <td>${data.contacto || ""}</td>
+           
                 <td>${data.referidode || ""}</td>
                 <td>${data.correo || ""}</td>
                 <td>${data.whatsapp || ""}</td>
@@ -228,84 +233,176 @@ async function loadData(searchTerm = "") {
             `;
             dataTable.appendChild(row);
         }
-        
+  
     
     });
-// Agregar eventos a los botones de editar y eliminar
-document.querySelectorAll(".edit-btn").forEach((btn) =>
-    btn.addEventListener("click", () => editData(btn.getAttribute("data-id")))
-);
 
-document.querySelectorAll(".generate-pdf-btn").forEach((btn) =>
-    btn.addEventListener("click", async () => {
-        const clientId = btn.getAttribute("data-id");
-        const docRef = doc(db, "clients", clientId);
-        try {
-            const docSnapshot = await getDoc(docRef);
-            if (docSnapshot.exists()) {
-                const data = docSnapshot.data();
-                
-                // Obtener los datos necesarios
-                const clienteNombre = data.nombredelcliente || "Nombre no disponible";
-                const clienteNumeroTarjeta = data.numerodetarjeta || "Número no disponible";
-                const img1 = document.getElementById("imageToUse");  // Primera imagen
-                const img2 = document.getElementById("secondImageToUse");  // Segunda imagen
-                
-                // Verificar si la primera imagen está disponible
-                if (!img1.complete || !img2.complete) {
-                    alert("Una o ambas imágenes no se han cargado correctamente.");
-                    return;
+    // Agregar eventos a los botones de editar y eliminar
+    document.querySelectorAll(".edit-btn").forEach((btn) =>
+        btn.addEventListener("click", () => editData(btn.getAttribute("data-id")))
+    );
+    document.querySelectorAll(".generate-pdf-btn").forEach((btn) =>
+        btn.addEventListener("click", async () => {
+            const clientId = btn.getAttribute("data-id");
+            const docRef = doc(db, "clients", clientId);
+            try {
+                const docSnapshot = await getDoc(docRef);
+                if (docSnapshot.exists()) {
+                    const data = docSnapshot.data();
+                    
+                    // Obtener los datos necesarios
+                    const clienteNombre = data.nombredelcliente || "Nombre no disponible";
+                    const clienteNumeroTarjeta = data.numerodetarjeta || "Número no disponible";
+                    const img = document.getElementById("imageToUse");
+    
+                    // Verificar si la imagen está disponible
+                    if (!img.complete) {
+                        alert("La imagen no se ha cargado correctamente.");
+                        return;
+                    }
+    
+                    const { jsPDF } = window.jspdf;
+    
+                    // Crear el documento PDF
+                    const fontBase64 = importedFontBase64;
+
+    const doc = new jsPDF();
+    doc.addFileToVFS("ShareTechMono.ttf", fontBase64);
+    doc.addFont("ShareTechMono.ttf", "Share Tech Mono", "normal");
+    
+                    // Insertar la imagen en el PDF
+                    doc.addImage(img, 'PNG', 10, 10, 180, 170); // x, y, width, height
+    
+                    // Establecer la fuente y tamaño
+                    doc.setFont("Share Tech Mono"); 
+                    doc.setFontSize(25);
+    
+                    // Cambiar el color del texto para el nombre del cliente
+                    doc.setTextColor(246, 187, 33); // Rojo anaranjado
+                    doc.text(clienteNombre, 25, 95); // Nombre del cliente en color rojo anaranjado
+    
+                    // Cambiar el color del texto para el número de tarjeta
+                    doc.setTextColor(235, 235, 235); // Verde
+                    doc.text(clienteNumeroTarjeta, 25, 107); // Número de tarjeta en color verde
+    
+                    // Guardar el PDF
+                    doc.save(data.nombredelcliente);
+                } else {
+                    console.log("El cliente no existe en la base de datos.");
                 }
-
-                const { jsPDF } = window.jspdf;
-
-                // Crear el documento PDF
-                const fontBase64 = importedFontBase64;
-                const doc = new jsPDF();
-                doc.addFileToVFS("ShareTechMono.ttf", fontBase64);
-                doc.addFont("ShareTechMono.ttf", "Share Tech Mono", "normal");
-
-                // Insertar la primera imagen en la primera página del PDF
-                doc.addImage(img1, 'PNG', 10, 10, 180, 170); // x, y, width, height
-
-                // Establecer la fuente y tamaño para el texto
-                doc.setFont("Share Tech Mono"); 
-                doc.setFontSize(25);
-
-                // Cambiar el color del texto para el nombre del cliente
-                doc.setTextColor(246, 187, 33); // Rojo anaranjado
-                doc.text(clienteNombre, 25, 95); // Nombre del cliente en color rojo anaranjado
-
-                // Cambiar el color del texto para el número de tarjeta
-                doc.setTextColor(235, 235, 235); // Verde
-                doc.text(clienteNumeroTarjeta, 25, 107); // Número de tarjeta en color verde
-
-                // Crear una nueva página en el PDF
-                doc.addPage();
-
-                // Insertar la segunda imagen en la segunda página
-                doc.addImage(img2, 'PNG', 10, 10, 180, 170); // x, y, width, height
-
-                // Guardar el PDF
-                doc.save(data.nombredelcliente);
-            } else {
-                console.log("El cliente no existe en la base de datos.");
+            } catch (error) {
+                console.error("Error al generar el PDF:", error);
             }
-        } catch (error) {
-            console.error("Error al generar el PDF:", error);
-        }
-    })
-);
-
-document.querySelectorAll(".delete-btn").forEach((btn) =>
-    btn.addEventListener("click", () => deleteData(btn.getAttribute("data-id")))
-);
+        })
+    );
+    
+    document.querySelectorAll(".delete-btn").forEach((btn) =>
+        btn.addEventListener("click", () => deleteData(btn.getAttribute("data-id")))
+    );
 }
-// Función para mostrar un toast
+
+// Función para eliminar un documento
+async function deleteData(id) {
+    try {
+        await deleteDoc(doc(db, "clients", id));
+        loadData();
+    } catch (error) {
+        console.error("Error al eliminar el documento:", error);
+    }
+}
+
+// Función para cargar los datos en el formulario de edición
+async function editData(id) {
+    await loadReferidos(); // Asegura que los referidos se carguen antes de editar
+    const docRef = doc(db, "clients", id);
+    const docSnapshot = await getDoc(docRef);
+    if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        
+        // Cargar los datos en los campos del formulario
+        Object.keys(formFields).forEach((key) => {
+            formFields[key].value = data[key] || "";
+        });
+
+        // Establecer el valor de referidode
+        if (data.referidode) {
+            formFields.referidode.value = data.referidode;  // Asignar directamente el ID del referente
+        }
+
+        // Establecer el botón de edición
+        editingDocId = id;
+        createBtn.textContent = "Guardar Cambios";
+    }
+}
+
+// Crear o editar datos
+const createBtn = document.getElementById("create");
+
+// Función para manejar el evento del botón "Guardar" y generar el PDF
+createBtn.addEventListener("click", async () => {
+    const data = Object.fromEntries(
+        Object.entries(formFields).map(([key, field]) => [key, field.value.trim()])
+    );
+
+    // Validación de campos obligatorios
+    if (!data.nombredelcliente || !data.miembrodesde || !data.contacto || !data.codigo || !data.correo || !data.whatsapp) {
+        showToast("Por favor, completa todos los campos obligatorios.", 'warning');
+        return;
+    }
+
+    try {
+        // Generar el número de tarjeta automáticamente
+        data.numerodetarjeta = generarNumeroDeTarjeta();
+        
+        // Si hay un referente seleccionado, tomar el ID de ese referente
+        if (data.referidode) {
+            data.referidode = data.referidode; // Guardar directamente el ID del referente
+        }
+
+        // Si estamos editando un cliente existente, actualizamos en ambas colecciones
+        if (editingDocId) {
+            // Actualizar en la colección "clients"
+            await updateDoc(doc(db, "clients", editingDocId), data);
+            
+            // También actualizamos en la colección "clientela"
+            await updateDoc(doc(db, "clientela", editingDocId), {
+                nombredelcliente: data.nombredelcliente
+            });
+            showToast("Cliente actualizado correctamente en ambas bases de datos.", 'success');
+        } else {
+            // Si es un nuevo cliente, agregamos a ambas colecciones
+
+            // Agregar al "clients"
+            const clientRef = await addDoc(collection(db, "clients"), data);
+
+            // Solo guardamos el nombre en "clientela"
+            await addDoc(collection(db, "clientela"), {
+                nombredelcliente: data.nombredelcliente
+            });
+            
+            showToast("Cliente registrado correctamente en ambas bases de datos.", 'success');
+        }
+
+        // Limpiar los campos
+        Object.values(formFields).forEach((field) => (field.value = ""));
+        editingDocId = null;
+        createBtn.textContent = "Crear";
+
+        // Recargar los datos
+        loadData();
+
+    } catch (error) {
+        console.error("Error al guardar los datos:", error);
+        showToast("Error al guardar los datos: " + error.message, 'danger');
+    }
+});
+
+
+// Función para mostrar los toasts
 function showToast(message, type) {
     const toastContainer = document.getElementById('toastContainer');
     const toast = document.createElement('div');
-    toast.classList.add('toast', `bg-${type}`, 'text-white', 'position-relative', 'fade', 'show');
+    toast.classList.add('toast', `bg-${type}`, 'text-white', 'position-relative');
     toast.innerHTML = `
         <div class="toast-body">
             ${message}
@@ -323,114 +420,8 @@ function showToast(message, type) {
     });
 }
 
-// Función para eliminar un documento
-async function deleteData(id) {
-    try {
-        await deleteDoc(doc(db, "clients", id));
-        showToast("Cliente eliminado correctamente.", "success");
-        loadData();
-    } catch (error) {
-        console.error("Error al eliminar el documento:", error);
-        showToast("Error al eliminar el cliente.", "danger");
-    }
-}
-
-// Función para cargar los datos en el formulario de edición
-async function editData(id) {
-    const docRef = doc(db, "clients", id);
-    const docSnapshot = await getDoc(docRef);
-    if (docSnapshot.exists()) {
-        const data = docSnapshot.data();
-
-        // Llenar los campos del formulario en el modal
-        document.getElementById("nombredelcliente").value = data.nombredelcliente || "";
-        document.getElementById("tipodetarjeta").value = data.tipodetarjeta || "";
-        document.getElementById("miembrodesde").value = data.miembrodesde || "";
-        document.getElementById("contacto").value = data.contacto || "";
-        document.getElementById("codigo").value = data.codigo || "";
-        document.getElementById("correo").value = data.correo || "";
-        document.getElementById("whatsapp").value = data.whatsapp || "";
-        document.getElementById("referidode").value = data.referidode || "";
-        document.getElementById("editingDocId").value = id;
-
-        // Mostrar el modal
-        const editModal = new bootstrap.Modal(document.getElementById("editModal"));
-        editModal.show();
-    } else {
-        showToast("Cliente no encontrado.", "warning");
-    }
-}
-
-// Guardar los cambios realizados en el formulario del modal
-document.getElementById("saveChanges").addEventListener("click", async () => {
-    const id = document.getElementById("editingDocId").value;
-    const updatedData = {
-        nombredelcliente: document.getElementById("nombredelcliente").value,
-        tipodetarjeta: document.getElementById("tipodetarjeta").value,
-        miembrodesde: document.getElementById("miembrodesde").value,
-        contacto: document.getElementById("contacto").value,
-        codigo: document.getElementById("codigo").value,
-        correo: document.getElementById("correo").value,
-        whatsapp: document.getElementById("whatsapp").value,
-        referidode: document.getElementById("referidode").value,
-    };
-
-    try {
-        await updateDoc(doc(db, "clients", id), updatedData);
-        showToast("Cliente actualizado correctamente.", "success");
-        const editModal = bootstrap.Modal.getInstance(document.getElementById("editModal"));
-        editModal.hide();
-        loadData(); // Recargar la tabla
-    } catch (error) {
-        console.error("Error al guardar los cambios:", error);
-        showToast("Error al actualizar el cliente.", "danger");
-    }
-});
 
 
-// Crear o editar datos
-    const createBtn = document.getElementById("create");
-    createBtn.addEventListener("click", async () => {
-        const data = Object.fromEntries(
-            Object.entries(formFields).map(([key, field]) => [key, field.value.trim()])
-        );
-
-        // Validación de campos obligatorios
-        if (!data.nombredelcliente || !data.miembrodesde || !data.contacto || !data.codigo || !data.correo || !data.whatsapp) {
-            alert("Por favor, completa todos los campos obligatorios.");
-            return;
-        }
-
-        try {
-            // Generar el número de tarjeta automáticamente
-            data.numerodetarjeta = generarNumeroDeTarjeta();
-            
-            // Si hay un referente seleccionado, tomar el ID de ese referente
-            if (data.referidode) {
-                data.referidode = data.referidode;  // Guardar directamente el ID del referente
-            }
-
-            // Guardar los datos en Firestore
-            if (editingDocId) {
-                await updateDoc(doc(db, "clients", editingDocId), data);
-                alert("Cliente actualizado correctamente");
-            } else {
-                await addDoc(collection(db, "clients"), data);
-                alert("Cliente registrado correctamente");
-            }
-
-            // Limpiar los campos
-            Object.values(formFields).forEach((field) => (field.value = ""));
-            editingDocId = null;
-            createBtn.textContent = "Crear";
-
-            // Recargar los datos
-            loadData();
-
-        } catch (error) {
-            console.error("Error al guardar los datos:", error);
-        }
-    });
 
 // Carga inicial de datos
 loadData();
@@ -450,19 +441,21 @@ async function loadReferidos() {
         selectReferidos.innerHTML = '<option value="">Selecciona un referente</option>';
 
         // Verificar si la colección tiene datos
-        if (querySnapshot.empty) {
+        if (querySnapshot.empty)
+             {
             console.log("No hay referidos disponibles");
             return;
         }
 
+        
         // Iterar sobre los documentos de la colección
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            console.log("Cargando referente: ", data.referidode); // Verifica que los datos están correctos
+            console.log("Cargando referente: ", data.nombredelcliente); // Verifica que los datos están correctos
 
             const option = document.createElement("option");
-            option.value = data.referidode;  // Asignar el ID del documento como valor
-            option.textContent = data.referidode ;  // Nombre del referente
+            option.value = data.nombredelcliente;  // Asignar el ID del documento como valor
+            option.textContent = data.nombredelcliente || "Nombre no disponible";  // Nombre del referente
             selectReferidos.appendChild(option);  // Agregar la opción al select
         });
     } catch (error) {
@@ -470,8 +463,36 @@ async function loadReferidos() {
     }
 }
 
+
 // Llamar la función para cargar los referidos cuando se inicializa la página
 loadReferidos();
+loadnombresss();
+
+async function loadnombresss() {
+    try {
+        // Verifica que el select esté disponible
+        const selectnombresss = document.getElementById("nombredelcliente");
+        if (!selectnombresss) {
+            console.log("No se encontró el select con id nombredelcliente");
+            return;
+        }
+
+        // Obtén los datos y agrega las opciones
+        const querySnapshot = await getDocs(collection(db, "clientela"));
+        selectnombresss.innerHTML = '<option value="">Selecciona un cliente</option>';
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const option = document.createElement("option");
+            option.value = data.nombredelcliente;
+            option.textContent = data.nombredelcliente || "Nombre no disponible";
+            selectnombresss.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Error al cargar los nombres:", error);
+    }
+}
+
 
 
 function generarNumeroDeTarjeta() {
@@ -488,4 +509,3 @@ function generarNumeroDeTarjeta() {
     
     return `${primeros8Digitos} ${numeroFinal1} ${numeroFinal2}`;
 }
-
