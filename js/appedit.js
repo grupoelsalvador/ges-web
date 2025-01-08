@@ -107,7 +107,8 @@ generatePdfBtn.addEventListener("click", () => {
     doc.text(`${clienteNumeroTarjeta.textContent}`, 25, 107); // Número de tarjeta en color verde
     
     // Guardar el PDF
-    doc.save('cliente.pdf');
+        doc.save(`${data.nombredelcliente}.pdf`);
+
 });
 
 
@@ -287,7 +288,8 @@ document.querySelectorAll(".generate-pdf-btn").forEach((btn) =>
                 doc.addImage(img2, 'PNG', 10, 10, 180, 170); // x, y, width, height
 
                 // Guardar el PDF
-                doc.save(data.nombredelcliente);
+                      doc.save(`${data.nombredelcliente}.pdf`);
+
             } else {
                 console.log("El cliente no existe en la base de datos.");
             }
